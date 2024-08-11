@@ -6,9 +6,11 @@ import com.springboot.blog.exeception.ResourceNotFoundException;
 import com.springboot.blog.repository.PostRepository;
 import com.springboot.blog.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +29,15 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDto> getAllPosts() {
-        List<Post> posts = postRepository.findAll();
+    public List<PostDto> getAllPosts(int pageNo, int pageSize) {
+
+        // create Pageable instance
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Page<Post> postsPage = postRepository.findAll(pageable);
+
+        // get content for page object
+        List<Post> posts = postsPage.getContent();
+
         return posts.stream().map(post -> mapToDTO(post)).collect(Collectors.toList());
     }
 
@@ -49,6 +58,12 @@ public class PostServiceImpl implements PostService {
 
         Post updatedPost = postRepository.save(post);
         return mapToDTO(updatedPost);
+    }
+
+    @Override
+    public void deletePostById(Long id) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id.toString()));
+        postRepository.deleteById(id);
     }
 
     private PostDto mapToDTO(Post post) {
