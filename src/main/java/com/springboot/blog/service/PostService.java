@@ -10,4 +10,6 @@ public interface PostService {
     List<PostDto> getAllPosts();
 
     PostDto getPost(Long id);
+
+    PostDto updatePost(PostDto postDto, Long id);
 }
