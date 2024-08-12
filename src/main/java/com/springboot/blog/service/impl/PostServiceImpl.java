@@ -1,6 +1,7 @@
 package com.springboot.blog.service.impl;
 
 import com.springboot.blog.dto.PostDto;
+import com.springboot.blog.dto.PostResponse;
 import com.springboot.blog.entity.Post;
 import com.springboot.blog.exeception.ResourceNotFoundException;
 import com.springboot.blog.repository.PostRepository;
@@ -29,7 +30,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDto> getAllPosts(int pageNo, int pageSize) {
+    public PostResponse getAllPosts(int pageNo, int pageSize) {
 
         // create Pageable instance
         Pageable pageable = PageRequest.of(pageNo, pageSize);
@@ -38,7 +39,15 @@ public class PostServiceImpl implements PostService {
         // get content for page object
         List<Post> posts = postsPage.getContent();
 
-        return posts.stream().map(post -> mapToDTO(post)).collect(Collectors.toList());
+        List<PostDto> contents = posts.stream().map(post -> mapToDTO(post)).collect(Collectors.toList());
+        PostResponse postResponse = new PostResponse();
+        postResponse.setContent(contents);
+        postResponse.setPageNo(postsPage.getNumber());
+        postResponse.setPageSize(postsPage.getSize());
+        postResponse.setTotalPages(postsPage.getTotalPages());
+        postResponse.setTotalElements(postsPage.getTotalElements());
+        postResponse.setLast(postsPage.isLast());
+        return postResponse;
     }
 
     @Override
