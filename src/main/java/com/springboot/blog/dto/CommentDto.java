@@ -1,7 +1,11 @@
 package com.springboot.blog.dto;
 
-import lombok.Builder;
+import lombok.Data;
 
-@Builder
-public record CommentDto(Long id, String name, String email, String body) {
+@Data
+public class CommentDto {
+    private Long id;
+    private String name;
+    private String email;
+    private String body;
 }

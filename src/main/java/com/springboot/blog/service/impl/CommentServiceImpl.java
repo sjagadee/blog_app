@@ -9,6 +9,7 @@ import com.springboot.blog.repository.CommentRepository;
 import com.springboot.blog.repository.PostRepository;
 import com.springboot.blog.service.CommentService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final ModelMapper mapper;
 
     @Override
     public CommentDto createComment(Long postId, CommentDto commentDto) {
@@ -78,9 +80,9 @@ public class CommentServiceImpl implements CommentService {
             throw new BlogAPIException(HttpStatus.BAD_REQUEST, STR."Comment Does not belong to Post with id: \{postId}");
         }
 
-        comment.setName(commentDto.name());
-        comment.setBody(commentDto.body());
-        comment.setEmail(commentDto.email());
+        comment.setName(commentDto.getName());
+        comment.setBody(commentDto.getBody());
+        comment.setEmail(commentDto.getEmail());
 
         Comment udatedComment = commentRepository.save(comment);
         return mapToDTO(udatedComment);
@@ -103,19 +105,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private Comment mapToEntity(CommentDto commentDto) {
-        return Comment.builder()
-                .name(commentDto.name())
-                .email(commentDto.email())
-                .body(commentDto.body())
-                .build();
+        Comment comment = mapper.map(commentDto, Comment.class);
+        return comment;
     }
 
     private CommentDto mapToDTO(Comment comment) {
-        return CommentDto.builder()
-                .id(comment.getId())
-                .name(comment.getName())
-                .email(comment.getEmail())
-                .body(comment.getBody())
-                .build();
+        CommentDto commentDto =  mapper.map(comment, CommentDto.class);
+        return commentDto;
     }
 }
