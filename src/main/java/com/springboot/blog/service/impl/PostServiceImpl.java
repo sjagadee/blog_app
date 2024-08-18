@@ -2,8 +2,10 @@ package com.springboot.blog.service.impl;
 
 import com.springboot.blog.dto.PostDto;
 import com.springboot.blog.dto.PostResponse;
+import com.springboot.blog.entity.Category;
 import com.springboot.blog.entity.Post;
 import com.springboot.blog.exeception.ResourceNotFoundException;
+import com.springboot.blog.repository.CategoryRepository;
 import com.springboot.blog.repository.PostRepository;
 import com.springboot.blog.service.CommentService;
 import com.springboot.blog.service.PostService;
@@ -23,12 +25,17 @@ import java.util.stream.Collectors;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final CategoryRepository categoryRepository;
     private final ModelMapper mapper;
 
     @Override
     public PostDto createPost(PostDto postDto) {
+        Category category = categoryRepository.findById(postDto.getCategoryId()).orElseThrow(() ->
+                new ResourceNotFoundException("Category", "id", postDto.getCategoryId().toString()));
         Post post = mapToEntity(postDto);
+        post.setCategory(category);
         Post savedPost = postRepository.save(post);
+
         PostDto postResponse = mapToDTO(savedPost);
         return postResponse;
     }
@@ -64,12 +71,16 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto updatePost(PostDto postDto, Long id) {
-        Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id.toString()));
+        Category category = categoryRepository.findById(postDto.getCategoryId()).orElseThrow(() ->
+                new ResourceNotFoundException("Category", "id", postDto.getCategoryId().toString()));
+        Post post = postRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Post", "id", id.toString()));
 
         // update the data with received info
         post.setTitle(postDto.getTitle());
         post.setDescription(postDto.getDescription());
         post.setContent(postDto.getContent());
+        post.setCategory(category);
 
         Post updatedPost = postRepository.save(post);
         return mapToDTO(updatedPost);
@@ -79,6 +90,15 @@ public class PostServiceImpl implements PostService {
     public void deletePostById(Long id) {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post", "id", id.toString()));
         postRepository.deleteById(id);
+    }
+
+    @Override
+    public List<PostDto> getPostsByCategoryId(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId).orElseThrow(() ->
+                new ResourceNotFoundException("Category", "id", categoryId.toString()));
+
+        List<Post> retrievedPost = postRepository.findByCategoryId(categoryId);
+        return retrievedPost.stream().map(post -> mapToDTO(post)).collect(Collectors.toList());
     }
 
     public PostDto mapToDTO(Post post) {
